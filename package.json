@@ -1,0 +1,23 @@
+{
+  "name": "sprout",
+  "version": "0.0.1",
+  "description": "Decentralized medium + twitter powered by smart contracts and IPFS",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/markcarey/sprout.git"
+  },
+  "author": "Mark Carey",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/markcarey/sprout/issues"
+  },
+  "homepage": "https://github.com/markcarey/sprout#readme",
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.2.0",
+    "@openzeppelin/contracts-upgradeable": "^4.2.0"
+  }
+}
