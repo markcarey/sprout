@@ -2,17 +2,17 @@
 
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts-upgradeable/contracts/token/ERC721/ERC721Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 
-import "@openzeppelin/contracts-upgradeable/contracts/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/contracts/token/ERC721/extensions/ERC721BurnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/contracts/token/ERC721/extensions/ERC721PausableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/contracts/token/ERC721/extensions/ERC721URIStorageUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721BurnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721PausableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721URIStorageUpgradeable.sol";
 
-import "@openzeppelin/contracts-upgradeable/contracts/access/AccessControlEnumerableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/contracts/utils/ContextUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/contracts/utils/CountersUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/contracts/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 import "@openzeppelin/contracts/proxy/Clones.sol";
 
@@ -39,14 +39,16 @@ contract Garden is
     AccessControlEnumerableUpgradeable,
     ERC721EnumerableUpgradeable,
     ERC721BurnableUpgradeable,
-    ERC721PausableUpgradeable
+    ERC721PausableUpgradeable,
+    ERC721URIStorageUpgradeable
 {
     function initialize(
         string memory name,
         string memory symbol,
-        string memory baseTokenURI
+        string memory baseTokenURI,
+        address owner
     ) public virtual initializer {
-        __ERC721PresetMinterPauserAutoId_init(name, symbol, baseTokenURI);
+        __ERC721PresetMinterPauserAutoId_init(name, symbol, baseTokenURI, owner);
     }
     using CountersUpgradeable for CountersUpgradeable.Counter;
 
@@ -67,7 +69,8 @@ contract Garden is
     function __ERC721PresetMinterPauserAutoId_init(
         string memory name,
         string memory symbol,
-        string memory baseTokenURI
+        string memory baseTokenURI,
+        address owner
     ) internal initializer {
         __Context_init_unchained();
         __ERC165_init_unchained();
@@ -80,20 +83,21 @@ contract Garden is
         __ERC721Pausable_init_unchained();
         // SPROUT: added for IPFS support
         __ERC721URIStorage_init_unchained();
-        __ERC721PresetMinterPauserAutoId_init_unchained(name, symbol, baseTokenURI);
+        __ERC721PresetMinterPauserAutoId_init_unchained(name, symbol, baseTokenURI, owner);
     }
 
     function __ERC721PresetMinterPauserAutoId_init_unchained(
         string memory name,
         string memory symbol,
-        string memory baseTokenURI
+        string memory baseTokenURI,
+        address owner
     ) internal initializer {
         _baseTokenURI = baseTokenURI;
 
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _setupRole(DEFAULT_ADMIN_ROLE, owner);
 
-        _setupRole(MINTER_ROLE, _msgSender());
-        _setupRole(PAUSER_ROLE, _msgSender());
+        _setupRole(MINTER_ROLE, owner);
+        _setupRole(PAUSER_ROLE, owner);
     }
 
     function _baseURI() internal view virtual override returns (string memory) {
@@ -111,15 +115,24 @@ contract Garden is
      *
      * - the caller must have the `MINTER_ROLE`.
      */
-    function mint(address to, string tokenURI) public virtual {
+    function mint(string calldata tokenURI) public virtual {
         require(hasRole(MINTER_ROLE, _msgSender()), "ERC721PresetMinterPauserAutoId: must have minter role to mint");
 
         // We cannot just use balanceOf to create the new tokenId because tokens
         // can be burned (destroyed), so we need a separate counter.
-        _mint(to, _tokenIdTracker.current());
+        _mint(_msgSender(), _tokenIdTracker.current());
         // SPROUT: added for IPFS support
         _setTokenURI(_tokenIdTracker.current(), tokenURI);
         _tokenIdTracker.increment();
+    }
+
+    function _burn(uint256 tokenId) internal override(ERC721Upgradeable, ERC721URIStorageUpgradeable) {
+        require(hasRole(MINTER_ROLE, _msgSender()));
+        super._burn(tokenId);
+    }
+    function tokenURI(uint256 tokenId) public view override(ERC721Upgradeable, ERC721URIStorageUpgradeable) 
+            returns (string memory){
+        return super.tokenURI(tokenId);
     }
 
     /**
@@ -183,15 +196,15 @@ contract FactoryClone {
 
     event GardenCreated(
         address indexed _owner,
-        bytes32 indexed _contract,
+        address indexed _contract,
         uint
     );
 
-    function createGarden(string calldata name, string calldata symbol, string baseTokenURI) external returns (address) {
+    function createGarden(string calldata name, string calldata symbol, string calldata baseTokenURI) external returns (address) {
         address clone = Clones.clone(tokenImplementation);
-        Garden(clone).initialize(name, symbol, baseTokenURI, _msgSender());
+        Garden(clone).initialize(name, symbol, baseTokenURI, msg.sender);
         allGardens.push(clone);
-        Emit GardenCreated(_msgSender(), clone, allGardens.length);
+        emit GardenCreated(msg.sender, clone, allGardens.length);
         return clone;
     }
 }
