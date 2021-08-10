@@ -2,41 +2,180 @@
 <html lang="en">
 <head>
 
+    <style>
+    .hide {
+        display: none;
+    }
+    </style>
+
 </head>
 
 <body>
 
-<script src="https://cdn.jsdelivr.net/npm/@alch/alchemy-web3@latest/dist/alchemyWeb3.min.js"></script>
+    <p>
+        <a id="connect" href="#">Connect Wallet</a>
+    </p>
+
+    <div id="planter" class="hide">
+
+        <form id="garden-form">
+
+            
+            <input name="name" id="name" placeholder="Name">
+
+            <input name="symbol" id="symbol" placeholder="SPROUT">
+
+            <button id="garden-button">Create Garden</button>
+
+        </form>
+
+    </div>
+
+    <div id="minter" class="hide">
+
+        <form id="mint-form">
+
+            <textarea name="sprout" id="sprout" placeholder="Short Content (like a Tweet)"></textarea>
+            
+            <input name="title" id="title" placeholder="Title (Optional)">
+
+            <textarea name="plant" id="plant" placeholder="Long Content (optional)"></textarea>
+
+            <button id="mint-button">Plant It!</button>
+
+        </form>
+
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@alch/alchemy-web3@latest/dist/alchemyWeb3.min.js"></script>
 
 <script>
 
-    const web3 = AlchemyWeb3.createAlchemyWeb3("https://polygon-mumbai.g.alchemy.com/v2/sDA8ZaKnUGk1Vt7wSvwn0J6t5fVYtN0T");
+    //const web3 = AlchemyWeb3.createAlchemyWeb3("https://polygon-mumbai.g.alchemy.com/v2/sDA8ZaKnUGk1Vt7wSvwn0J6t5fVYtN0T");
+    const web3 = AlchemyWeb3.createAlchemyWeb3("wss://polygon-mumbai.g.alchemy.com/v2/sDA8ZaKnUGk1Vt7wSvwn0J6t5fVYtN0T");
     var accounts;
+    var gardenAddress;
+
+    const contractABI = [
+        {
+        "inputs": [],
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+        },
+        {
+        "anonymous": false,
+        "inputs": [
+            {
+            "indexed": true,
+            "internalType": "address",
+            "name": "_owner",
+            "type": "address"
+            },
+            {
+            "indexed": true,
+            "internalType": "address",
+            "name": "_contract",
+            "type": "address"
+            },
+            {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+            }
+        ],
+        "name": "GardenCreated",
+        "type": "event"
+        },
+        {
+        "inputs": [
+            {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+            }
+        ],
+        "name": "allGardens",
+        "outputs": [
+            {
+            "internalType": "address",
+            "name": "",
+            "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+        },
+        {
+        "inputs": [
+            {
+            "internalType": "string",
+            "name": "name",
+            "type": "string"
+            },
+            {
+            "internalType": "string",
+            "name": "symbol",
+            "type": "string"
+            },
+            {
+            "internalType": "string",
+            "name": "baseTokenURI",
+            "type": "string"
+            }
+        ],
+        "name": "createGarden",
+        "outputs": [
+            {
+            "internalType": "address",
+            "name": "",
+            "type": "address"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+        },
+        {
+        "inputs": [],
+        "name": "getAllGardens",
+        "outputs": [
+            {
+            "internalType": "address[]",
+            "name": "",
+            "type": "address[]"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+        },
+        {
+        "inputs": [
+            {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+            }
+        ],
+        "name": "getGardensForUser",
+        "outputs": [
+            {
+            "internalType": "address[]",
+            "name": "",
+            "type": "address[]"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+        }
+    ];
+    const contractAddress = "0x1fa9f9C07ea2e579F505b11aDF3e78a769DB9d47";
+    const factory = new web3.eth.Contract(contractABI, contractAddress);
 
     async function main() {
         const blockNumber = await web3.eth.getBlockNumber();
         console.log("The latest block number is " + blockNumber);
         
-        if (window.ethereum) {
-            console.log("window.ethereum true");
-            window.ethereum
-                .enable()
-                .then(result => {
-                    // Metamask is ready to go!
-                    console.log(result);
-                    accounts = result;
-                    login();
-                })
-                .catch(reason => {
-                    // Handle error. Likely the user rejected the login.
-                });
-        } else {
-            // The user doesn't have Metamask installed.
-            console.log("window.ethereum false");
-        }
-
-
-
         accounts = await web3.eth.getAccounts();
         connectWallet();
 
@@ -52,9 +191,232 @@
         
 
     async function connectWallet() {
-        
+        if (window.ethereum) {
+            console.log("window.ethereum true");
+            window.ethereum
+                .enable()
+                .then(async result => {
+                    // Metamask is ready to go!
+                    console.log(result);
+                    accounts = result;
+                    var gardens = await factory.methods.getGardensForUser(accounts[0]).call();
+                    console.log(gardens);
+                    if ( gardens.length > 0 ) {
+                        gardenAddress = gardens[gardens.length - 1];
+                        $("#minter").show();
+                    } else {
+                        $("#planter").show();
+                    }
+                })
+                .catch(reason => {
+                    // Handle error. Likely the user rejected the login.
+                });
+        } else {
+            // The user doesn't have Metamask installed.
+            console.log("window.ethereum false");
+        }
         
     }
+
+async function createGarden(name, symbol) {
+    const contractABI = [
+        {
+        "inputs": [],
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+        },
+        {
+        "anonymous": false,
+        "inputs": [
+            {
+            "indexed": true,
+            "internalType": "address",
+            "name": "_owner",
+            "type": "address"
+            },
+            {
+            "indexed": true,
+            "internalType": "address",
+            "name": "_contract",
+            "type": "address"
+            },
+            {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+            }
+        ],
+        "name": "GardenCreated",
+        "type": "event"
+        },
+        {
+        "inputs": [
+            {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+            }
+        ],
+        "name": "allGardens",
+        "outputs": [
+            {
+            "internalType": "address",
+            "name": "",
+            "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+        },
+        {
+        "inputs": [
+            {
+            "internalType": "string",
+            "name": "name",
+            "type": "string"
+            },
+            {
+            "internalType": "string",
+            "name": "symbol",
+            "type": "string"
+            },
+            {
+            "internalType": "string",
+            "name": "baseTokenURI",
+            "type": "string"
+            }
+        ],
+        "name": "createGarden",
+        "outputs": [
+            {
+            "internalType": "address",
+            "name": "",
+            "type": "address"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+        },
+        {
+        "inputs": [],
+        "name": "getAllGardens",
+        "outputs": [
+            {
+            "internalType": "address[]",
+            "name": "",
+            "type": "address[]"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+        },
+        {
+        "inputs": [
+            {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+            }
+        ],
+        "name": "getGardensForUser",
+        "outputs": [
+            {
+            "internalType": "address[]",
+            "name": "",
+            "type": "address[]"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+        }
+    ];
+    const contractAddress = "0x1fa9f9C07ea2e579F505b11aDF3e78a769DB9d47";
+    const factory = new web3.eth.Contract(contractABI, contractAddress);
+    const nonce = await web3.eth.getTransactionCount(accounts[0], 'latest');
+
+    //the transaction
+    const tx = {
+        'from': ethereum.selectedAddress,
+        'to': contractAddress,
+        'nonce': "" + nonce,
+        'data': factory.methods.createGarden(name, symbol, "").encodeABI()
+    };
+    console.log(tx);
+
+    const txHash = await ethereum.request({
+        method: 'eth_sendTransaction',
+        params: [tx],
+    });
+
+    if (txHash) {
+        console.log("The hash of your transaction is: ", txHash, "\nCheck Alchemy's Mempool to view the status of your transaction!"); 
+        
+        var txn = await web3.eth.getTransaction(txHash);
+        console.log(txn);
+        var all = await factory.methods.getAllGardens().call();
+        console.log(all);
+        var user = await factory.methods.getGardensForUser(accounts[0]).call();
+        console.log(user);
+
+        var pendingTxHash = txHash;
+        web3.eth.subscribe('newBlockHeaders', async (error, event) => {
+            if (error) {
+                console.log("error", error);
+            }
+            console.log("event", event);
+            const blockTxHashes = (await web3.eth.getBlock(event.hash)).transactions;
+
+            if (blockTxHashes.includes(pendingTxHash)) {
+                web3.eth.clearSubscriptions();
+                $("#minter").show();
+                console.log('confirmed!');
+                console.log(await web3.eth.getTransactionReceipt(pendingTxHash));
+                var all = await factory.methods.getAllGardens().call();
+                console.log(all);
+                var user = await factory.methods.getGardensForUser(accounts[0]).call();
+                console.log(user);
+                gardenAddress = user[user.length - 1];
+                console.log("The new contract is at " + gardenAddress);
+
+            }
+        });
+    } else {
+        console.log("Something went wrong when submitting your transaction:");
+    } 
+
+}
+
+    $( document ).ready(function() {
+
+        $("#connect").click(function(){
+            connectWallet();
+            return false;
+        });
+
+        $("#mint-button").click(function(){
+            var sprout = $("#sprout").val();
+            if (!sprout) {
+                alert('Sprout is required');
+            }
+            var title = $("#title").val();
+            var plant = $("#plant").val();
+            // TODO: post to server, which relays to web3/nft.storage
+            return false;
+        });
+
+        $("#garden-button").click(function(){
+            var name = $("#name").val();
+            var symbol = $("#symbol").val();
+            if ( name && symbol ) {
+                createGarden(name, symbol);
+            } else {
+                alert("Need both name and symbol to create a new garden");
+            }
+            return false;
+        });
+
+    }); // docready
 </script>
 
 </body>
