@@ -189,6 +189,7 @@ contract Garden is
 contract FactoryClone {
     address immutable tokenImplementation;
     address[] public allGardens;
+    mapping(address => address[]) userToGardens;
 
     constructor() public {
         tokenImplementation = address(new Garden());
@@ -204,7 +205,19 @@ contract FactoryClone {
         address clone = Clones.clone(tokenImplementation);
         Garden(clone).initialize(name, symbol, baseTokenURI, msg.sender);
         allGardens.push(clone);
+        userToGardens[msg.sender].push(clone);
         emit GardenCreated(msg.sender, clone, allGardens.length);
         return clone;
     }
+
+    // returns array of all Garden contract addresses
+    function getAllGardens() public view returns (address[] memory){
+       return allGardens;
+    }
+
+    // returns array of all Garden contract addresses for a specified user address
+    function getGardensForUser(address user) public view returns (address[] memory){
+       return userToGardens[user];
+    }
+
 }

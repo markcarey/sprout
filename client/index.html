@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+</head>
+
+<body>
+
+<script src="https://cdn.jsdelivr.net/npm/@alch/alchemy-web3@latest/dist/alchemyWeb3.min.js"></script>
+
+<script>
+
+    const web3 = AlchemyWeb3.createAlchemyWeb3("https://polygon-mumbai.g.alchemy.com/v2/sDA8ZaKnUGk1Vt7wSvwn0J6t5fVYtN0T");
+    var accounts;
+
+    async function main() {
+        const blockNumber = await web3.eth.getBlockNumber();
+        console.log("The latest block number is " + blockNumber);
+        
+        if (window.ethereum) {
+            console.log("window.ethereum true");
+            window.ethereum
+                .enable()
+                .then(result => {
+                    // Metamask is ready to go!
+                    console.log(result);
+                    accounts = result;
+                    login();
+                })
+                .catch(reason => {
+                    // Handle error. Likely the user rejected the login.
+                });
+        } else {
+            // The user doesn't have Metamask installed.
+            console.log("window.ethereum false");
+        }
+
+
+
+        accounts = await web3.eth.getAccounts();
+        connectWallet();
+
+        window.ethereum.on('accountsChanged', function () {
+            web3.eth.getAccounts(function (error, accts) {
+                console.log(accts[0], 'current account after account change');
+                accounts = accts;
+                location.reload();
+            });
+        });
+    }
+    main();
+        
+
+    async function connectWallet() {
+        
+        
+    }
+</script>
+
+</body>
+
+</html>

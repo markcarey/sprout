@@ -7,7 +7,7 @@ const { createAlchemyWeb3 } = require("@alch/alchemy-web3");
 const web3 = createAlchemyWeb3(API_URL);
 
 const contract = require("../artifacts/contracts/Sprout.sol/FactoryClone.json");
-const contractAddress = "0x96333a021Ab89efa117656b35a2920e82A5567b9";
+const contractAddress = "0x1fa9f9C07ea2e579F505b11aDF3e78a769DB9d47";
 const factory = new web3.eth.Contract(contract.abi, contractAddress);
 
 async function plant(name, symbol) {
@@ -38,5 +38,11 @@ async function plant(name, symbol) {
 
 }
 
-plant("Test Two", "TWO");
+async function getGardens() {
+  const allGardens = await factory.methods.getAllGardens().call();
+  console.log(allGardens);
+}
+
+//plant("Test Two", "TWO");
+getGardens();
 

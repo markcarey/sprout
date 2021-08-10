@@ -7,7 +7,7 @@ const { createAlchemyWeb3 } = require("@alch/alchemy-web3");
 const web3 = createAlchemyWeb3(API_URL);
 
 const contract = require("../artifacts/contracts/Sprout.sol/Garden.json");
-const contractAddress = "0xc87A7b4b1022fD10BCd3Add8D0D4ce2f46F5F226";
+const contractAddress = "0xEB6028cE7e47463c4e1C223b0723339432c3c61C";
 const garden = new web3.eth.Contract(contract.abi, contractAddress);
 
 async function mint(uri) {
@@ -43,7 +43,7 @@ async function tokenURI(id) {
   console.log("The URI is: " + uri);
 }
 
-//mint("https://www.testmetadata.com/ten.json");
+mint("https://nftwords.bid/api/word/1");
 
-tokenURI(1);
+//tokenURI(1);
 
