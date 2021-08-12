@@ -10,6 +10,11 @@
         border: black 1px solid;
         margin-top: 20px;
     }
+    #garden-name {
+        font-size: 14pt;
+        font-weight: bold;
+        margin-top: 20px;
+    }
     </style>
 
 </head>
@@ -18,6 +23,10 @@
 
     <h1>Sprout</h1>
     <h3>Decentralized Medium+Twitter powered by smart contracts and IPFS on Polygon</h3>
+
+    <div>
+        <span id="claim-amount">?</span> <button id="claim">Claim</button>
+    </div>
 
     <p>
         <a id="connect" href="#">Connect Wallet (Polygon)</a>
@@ -52,6 +61,8 @@
 
             <textarea name="sprout" id="sprout" placeholder="Short Content (like a Tweet)"></textarea><br />
             <br />
+            Image: <input type="file" id="image" name="image" accept="image/*"><br />
+            <br />
             <input name="title" id="title" placeholder="Title (Optional)"><br />
             <br />
             <textarea name="plant" id="plant" placeholder="Long Content (optional)"></textarea><br />
@@ -62,6 +73,7 @@
 
     </div>
 
+    <div id="garden-name"></div>
     <div id="posts">
 
     </div>
@@ -73,8 +85,10 @@
 
     //const web3 = AlchemyWeb3.createAlchemyWeb3("https://polygon-mumbai.g.alchemy.com/v2/sDA8ZaKnUGk1Vt7wSvwn0J6t5fVYtN0T");
     const web3 = AlchemyWeb3.createAlchemyWeb3("wss://polygon-mumbai.g.alchemy.com/v2/sDA8ZaKnUGk1Vt7wSvwn0J6t5fVYtN0T");
+    var BN = web3.utils.BN;
     var accounts;
     var gardenAddress;
+    var ipfsImageURL = "";
 
     const contractABI = [
         {
@@ -108,6 +122,50 @@
         "type": "event"
         },
         {
+        "anonymous": false,
+        "inputs": [
+            {
+            "indexed": true,
+            "internalType": "address",
+            "name": "_follower",
+            "type": "address"
+            },
+            {
+            "indexed": true,
+            "internalType": "address",
+            "name": "_contract",
+            "type": "address"
+            }
+        ],
+        "name": "GardenFollowed",
+        "type": "event"
+        },
+        {
+        "anonymous": false,
+        "inputs": [
+            {
+            "indexed": true,
+            "internalType": "address",
+            "name": "_liker",
+            "type": "address"
+            },
+            {
+            "indexed": true,
+            "internalType": "address",
+            "name": "_contract",
+            "type": "address"
+            },
+            {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+            }
+        ],
+        "name": "PlantLiked",
+        "type": "event"
+        },
+        {
         "inputs": [
             {
             "internalType": "uint256",
@@ -121,6 +179,19 @@
             "internalType": "address",
             "name": "",
             "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+        },
+        {
+        "inputs": [],
+        "name": "claimable",
+        "outputs": [
+            {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
             }
         ],
         "stateMutability": "view",
@@ -152,7 +223,20 @@
             "type": "address"
             }
         ],
-        "stateMutability": "nonpayable",
+        "stateMutability": "payable",
+        "type": "function"
+        },
+        {
+        "inputs": [
+            {
+            "internalType": "address",
+            "name": "gardenAddress",
+            "type": "address"
+            }
+        ],
+        "name": "follow",
+        "outputs": [],
+        "stateMutability": "payable",
         "type": "function"
         },
         {
@@ -186,9 +270,34 @@
         ],
         "stateMutability": "view",
         "type": "function"
+        },
+        {
+        "inputs": [
+            {
+            "internalType": "address",
+            "name": "gardenAddress",
+            "type": "address"
+            },
+            {
+            "internalType": "uint256",
+            "name": "tokenId",
+            "type": "uint256"
+            }
+        ],
+        "name": "like",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function"
+        },
+        {
+        "inputs": [],
+        "name": "withdraw",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
         }
     ];
-    const contractAddress = "0x1fa9f9C07ea2e579F505b11aDF3e78a769DB9d47";
+    const contractAddress = "0x6F479f4dc152d27390F99a8BCeB0739aA945d767";
     const factory = new web3.eth.Contract(contractABI, contractAddress);
 
     const gardenABI = [
@@ -981,6 +1090,11 @@
                         $("#planter").show();
                     }
                     $("#status").text("Connected as " + accounts[0]);
+                    var farmed = await factory.methods.claimable().call({'from': ethereum.selectedAddress});
+                    console.log(farmed.toString());
+                    var canClaim = web3.utils.fromWei( farmed.toString() );
+                    $("#claim-amount").text(canClaim + ' MATIC');
+
                 })
                 .catch(reason => {
                     // Handle error. Likely the user rejected the login.
@@ -1000,6 +1114,7 @@ async function createGarden(name, symbol) {
     const tx = {
         'from': ethereum.selectedAddress,
         'to': contractAddress,
+        'value': web3.utils.toHex(new BN('100000000000000000')),
         'nonce': "" + nonce,
         'data': factory.methods.createGarden(name, symbol, "").encodeABI()
     };
@@ -1032,6 +1147,7 @@ async function createGarden(name, symbol) {
 
             if (blockTxHashes.includes(pendingTxHash)) {
                 web3.eth.clearSubscriptions();
+                $("#planter").hide();
                 $("#minter").show();
                 $("#status").text("Garden created.");
                 console.log('confirmed!');
@@ -1059,36 +1175,130 @@ function ipfsToHttp(ipfs) {
     return http;
 }
 
-async function loadPosts() {
-    var total = await garden.methods.totalSupply().call();
-    console.log(total);
-    for (let i = 0; i < total; i++) {
-        var tokenId = await garden.methods.tokenByIndex(i).call();
-        console.log(tokenId);
-        var tokenUri = await garden.methods.tokenURI(tokenId).call();
-        console.log(tokenUri);
-        tokenUri = ipfsToHttp(tokenUri);
-        console.log(tokenUri);
-        const response = await fetch(tokenUri);
-        var result = await response.json();
-        console.log(result);
-        var sprout = result.description;
-        var title = result.title;
-        var plant = result.attributes[0].value;
-        var postHTML = `
-                            <div class="post">
-                                <div class="sprout">
-                                    <span>${sprout}</span> <a class="more" href="#">More</a>
-                                </div>
-                                <div class="plant hide">
-                                    <h3>${title}</h3>
-                                    <div class="content">
-                                        <p>${plant}</p>
-                                    </div>
-                                </div>
-                            </div>`;
-        $("#posts").prepend(postHTML);
+function getPostHTML(metadata) {
+    const sprout = metadata.description;
+    const title = metadata.name;
+    var plant = "";
+    if ( metadata.attributes && metadata.attributes.length > 0 ) {
+        plant = metadata.attributes[0].value;
     }
+    var postHTML = `
+        <div class="post">
+            <div class="sprout">
+                <span>${sprout}</span> <a class="more" href="#">More</a> <a href="#" class="like">Like</a> <a href="#" class="buy">Sell</a>
+            </div>
+            <div class="plant hide">
+                <h3>${title}</h3>
+                <div class="content">
+                    <p>${plant}</p>
+                </div>
+            </div>
+        </div>`;
+    return postHTML;
+}
+
+async function loadPosts() {
+    //var total = await garden.methods.totalSupply().call();
+    //console.log(total);
+    const covTokensURI = 'https://api.covalenthq.com/v1/80001/tokens/' + gardenAddress + '/nft_token_ids/?&key=ckey_ac7c55f53e19476b85f0a1099af';
+    const response = await fetch(covTokensURI);
+    var covTokens = await response.json();
+    console.log(covTokens);
+    var gardenName = covTokens.data.items[0].contract_name;
+    $("#garden-name").text(gardenName).append('<button data-address="' + gardenAddress + '" class="follow">Follow</button>');
+    $.each( covTokens.data.items, async function(index, item) {
+        var tokenId = item.token_id;
+    
+    
+    //for (let i = 0; i < total; i++) {
+        //var tokenId = await garden.methods.tokenByIndex(i).call();
+        console.log(tokenId);
+        //var tokenUri = await garden.methods.tokenURI(tokenId).call();
+        //console.log(tokenUri);
+        //tokenUri = ipfsToHttp(tokenUri);
+        //console.log(tokenUri);
+        var covURI = 'https://api.covalenthq.com/v1/80001/tokens/' + gardenAddress + '/nft_metadata/' + tokenId + '/?&key=ckey_ac7c55f53e19476b85f0a1099af';
+        const response = await fetch(covURI);
+        var covResp = await response.json();
+        console.log(covResp);
+        var result = covResp.data.items[0].nft_data[0].external_data;
+        var postHTML = getPostHTML(result);
+        var $post = $(postHTML).data("address", gardenAddress).data("token", tokenId);
+        $("#posts").prepend($post);
+    }); // $.each
+}
+
+async function follow(address) {
+    if ( accounts.length < 1 ) {
+        connectWallet();
+    } else {
+        const nonce = await web3.eth.getTransactionCount(accounts[0], 'latest');
+
+        //the transaction
+        const tx = {
+            'from': ethereum.selectedAddress,
+            'to': contractAddress,
+            'value': web3.utils.toHex(new BN('100000000000000000')),
+            'nonce': "" + nonce,
+            'data': factory.methods.follow(address).encodeABI()
+        };
+        console.log(tx);
+
+        $("#status").text("Waiting for follow transaction...");
+
+        const txHash = await ethereum.request({
+            method: 'eth_sendTransaction',
+            params: [tx],
+        });
+        console.log(txHash);
+    }
+}
+
+async function like(address, tokenId) {
+    if ( accounts.length < 1 ) {
+        connectWallet();
+    } else {
+        const nonce = await web3.eth.getTransactionCount(accounts[0], 'latest');
+
+        //the transaction
+        const tx = {
+            'from': ethereum.selectedAddress,
+            'to': contractAddress,
+            'value': web3.utils.toHex(new BN('10000000000000000')),
+            'nonce': "" + nonce,
+            'data': factory.methods.like(address, tokenId).encodeABI()
+        };
+        console.log(tx);
+
+        $("#status").text("Waiting for Like transaction...");
+
+        const txHash = await ethereum.request({
+            method: 'eth_sendTransaction',
+            params: [tx],
+        });
+        console.log(txHash);
+    }
+}
+
+async function claim() {
+    const nonce = await web3.eth.getTransactionCount(accounts[0], 'latest');
+
+    //the transaction
+    const tx = {
+        'from': ethereum.selectedAddress,
+        'to': contractAddress,
+        'nonce': "" + nonce,
+        'data': factory.methods.withdraw().encodeABI()
+    };
+    console.log(tx);
+
+    $("#status").text("Waiting for claim transaction...");
+
+    const txHash = await ethereum.request({
+        method: 'eth_sendTransaction',
+        params: [tx],
+    });
+    console.log(txHash);
 }
 
     $( document ).ready(function() {
@@ -1109,6 +1319,35 @@ async function loadPosts() {
             return false;
         });
 
+        $("#image").change(async function(){
+            var fileInput = document.querySelector("#image");
+            var files = fileInput.files;
+            if ( files.length < 1 ) {
+                return false;
+            }
+            var imageFile = files[0];
+            console.log(imageFile);
+            $("#status").text("Uploading image to IPFS...");
+            $("#mint-button").text("Please Wait").prop('disabled', true);
+            const response = await fetch('https://api.nft.storage/upload', { 
+                method: 'post', 
+                headers: new Headers({
+                    'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkaWQ6ZXRocjoweDU0NkZiYmNhOEIzZDIwMDAzZTA2ZjMzZmRBN0E0NzUxMGExRUY5OTgiLCJpc3MiOiJuZnQtc3RvcmFnZSIsImlhdCI6MTYyODYxMDE4NzkwNiwibmFtZSI6InNwcm91dCBpbWFnZXMifQ.Y1lFAHCaStzfxyRB72iyWIyuPuU-7EoYgNcLwiBHu-8', 
+                    'Content-Type': 'application/json'
+                }), 
+                body: imageFile
+            });
+            var result = await response.json();
+            console.log( result );
+            if (result.ok) {
+                $("#status").text("Saved image to IPFS.");
+                $("#mint-button").text("Plant It!").prop('disabled', false);
+                console.log("Image CID", result.value.cid);
+                ipfsImageURL = "https://" + result.value.cid + ".ipfs.dweb.link/";
+            }
+            
+        });
+
         $("#mint-button").click(async function(e){
             e.preventDefault();
             $("#status").text("Saving to IPFS...");
@@ -1122,25 +1361,39 @@ async function loadPosts() {
             var plantJson = {
                 "name": title,
                 "description": sprout,
+                "image": ipfsImageURL,
                 "attributes": [
                     {
-                        "trait_type": "content",
+                        "trait": "content",
                         "value": plant
                     }
                 ]
             };
+            const blob = new Blob([JSON.stringify(plantJson)], { type: 'application/json' });
+            const file = new File([ blob ], 'metadata.json');
             const response = await fetch('https://api.nft.storage/upload', { 
                 method: 'post', 
                 headers: new Headers({
                     'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkaWQ6ZXRocjoweDU0NkZiYmNhOEIzZDIwMDAzZTA2ZjMzZmRBN0E0NzUxMGExRUY5OTgiLCJpc3MiOiJuZnQtc3RvcmFnZSIsImlhdCI6MTYyODYxMDE3NzQxNSwibmFtZSI6InNwcm91dCBtZXRhZGF0YSJ9.6YwPqstbUyRfNiGwEaYccfGZZYGmXOSuAuLzLduwdRM', 
                     'Content-Type': 'application/json'
                 }), 
-                body: JSON.stringify(plantJson)
+                body: file
             });
             var result = await response.json();
             console.log( result );
             if (result.ok) {
                 $("#status").text("Saved to IPFS.");
+
+                // test infura pinning
+                fetch('https://ipfs.infura.io:5001/api/v0/pin/add?arg=' + result.value.cid, { 
+                    method: 'post', 
+                    mode: 'no-cors',
+                    headers: new Headers({
+                        'Authorization': 'Basic MXdhVDRmeHd5blBzcG40RnVBMlJWVjV6VTVUOjJiM2MwNWJjNDMwNDdhYzlkYzA4NWRhY2Y1MzljM2E4'
+                    })
+                });
+
+
                 var uri = "ipfs://" + result.value.cid;
                 nonce = await web3.eth.getTransactionCount(accounts[0], 'latest');
                 //the transaction
@@ -1174,20 +1427,12 @@ async function loadPosts() {
                         $("#sprout").val("");
                         $("#title").val("");
                         $("#plant").val("");
+                        ipfsImageURL = "";
                         // TODO: publishing stuff
-                        var postHTML = `
-                            <div class="post">
-                                <div class="sprout">
-                                    <span>${sprout}</span> <a class="more" href="#">More</a>
-                                </div>
-                                <div class="plant hide">
-                                    <h3>${title}</h3>
-                                    <div class="content">
-                                        <p>${plant}</p>
-                                    </div>
-                                </div>
-                            </div>`;
-                        $("#posts").prepend(postHTML);
+                        var postHTML = getPostHTML(plantJson);
+                        var tokenId = 0; // TODO get actual tokenId for newly minted plant
+                        var $post = $(postHTML).data("address", gardenAddress).data("token", tokenId);
+                        $("#posts").prepend($post);
                     }
                 });
 
@@ -1207,6 +1452,25 @@ async function loadPosts() {
             } else {
                 alert("Need both name and symbol to create a new garden");
             }
+            return false;
+        });
+
+        $("body").on("click", ".follow", function(){
+            var address = $(this).data("address");
+            follow(address);
+            return false;
+        });
+
+        $("body").on("click", "#claim", function(){
+            claim();
+            return false;
+        });
+
+        $("#posts").on("click", ".like", function(){
+            const tokenId = $(this).parents("div.post").data("token");
+            const address = $(this).parents("div.post").data("address");
+            console.log(tokenId, address);
+            like(address, tokenId);
             return false;
         });
 

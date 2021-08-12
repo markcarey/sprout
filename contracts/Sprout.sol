@@ -187,12 +187,18 @@ contract Garden is
 }
 
 contract FactoryClone {
+    using StringsUpgradeable for uint;
     address immutable tokenImplementation;
+    address owner;
     address[] public allGardens;
     mapping(address => address[]) userToGardens;
+    mapping(address => address) ownerOfGarden;
+    mapping (address => uint) pendingWithdrawals;
+    mapping(address => address[]) userToFollowedGardens;
 
     constructor() public {
         tokenImplementation = address(new Garden());
+        owner = msg.sender;
     }
 
     event GardenCreated(
@@ -201,11 +207,25 @@ contract FactoryClone {
         uint
     );
 
-    function createGarden(string calldata name, string calldata symbol, string calldata baseTokenURI) external returns (address) {
+    event GardenFollowed(
+        address indexed _follower,
+        address indexed _contract
+    );
+
+    event PlantLiked(
+        address indexed _liker,
+        address indexed _contract,
+        uint
+    );
+
+    function createGarden(string calldata name, string calldata symbol, string calldata baseTokenURI) external payable returns (address) {
+        require(msg.value == 0.1 ether, "You must send 0.1 MATIC");
+        pendingWithdrawals[owner] += msg.value;
         address clone = Clones.clone(tokenImplementation);
         Garden(clone).initialize(name, symbol, baseTokenURI, msg.sender);
         allGardens.push(clone);
         userToGardens[msg.sender].push(clone);
+        ownerOfGarden[clone] = msg.sender;
         emit GardenCreated(msg.sender, clone, allGardens.length);
         return clone;
     }
@@ -218,6 +238,38 @@ contract FactoryClone {
     // returns array of all Garden contract addresses for a specified user address
     function getGardensForUser(address user) public view returns (address[] memory){
        return userToGardens[user];
+    }
+
+    function follow(address gardenAddress) external payable {
+        require(msg.value == 0.1 ether, "You must send 0.1 MATIC");
+        address gardener = ownerOfGarden[gardenAddress];
+        pendingWithdrawals[gardener] += 0.09 ether;
+        pendingWithdrawals[owner] += 0.01 ether;
+        // TODO: track followers, following, plus counts
+        userToFollowedGardens[msg.sender].push(gardenAddress);
+        emit GardenFollowed(msg.sender, gardenAddress);
+    }
+
+    function like(address gardenAddress, uint256 tokenId) external payable  {
+        require(msg.value == 0.01 ether, "You must send 0.01 MATIC");
+        address gardener = ownerOfGarden[gardenAddress];
+        pendingWithdrawals[gardener] += 0.009 ether;
+        pendingWithdrawals[owner] += 0.001 ether;
+        // TODO: track likers, likes, plus counts
+        emit PlantLiked(msg.sender, gardenAddress, tokenId);
+    }
+
+    function claimable() public view returns (uint){
+        uint amount = pendingWithdrawals[msg.sender];
+        require(amount > 0 ether, "Nothing there");
+        return amount;
+    }
+
+    function withdraw() public {
+        uint amount = pendingWithdrawals[msg.sender];
+        require(amount > 0 ether, "Nothing to claim");
+        pendingWithdrawals[msg.sender] = 0;
+        payable(msg.sender).transfer(amount);
     }
 
 }
