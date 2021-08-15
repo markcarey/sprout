@@ -1,1482 +1,257 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0"/>
+  <title>Sprout</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌱</text></svg>">
 
-    <style>
-    .hide {
-        display: none;
-    }
-    .post {
-        border: black 1px solid;
-        margin-top: 20px;
-    }
-    #garden-name {
-        font-size: 14pt;
-        font-weight: bold;
-        margin-top: 20px;
-    }
-    </style>
-
+  <!-- CSS  -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <style>
+  
+  </style>
 </head>
-
 <body>
+  <nav class="purple lighten-1" role="navigation">
+    <div class="nav-wrapper container"><a id="logo-container" href="/" class="brand-logo">🌱Sprout</a>
+      <ul class="right hide-on-med-and-down">
+        <li><a><span id="network" class="badge white" data-badge-caption="polygon"></span></a></li>
+        <li><a href="/twitter/">Sproutter</a></li>
+        <li><a href="/medium/">Sproutium</a></li>
+        <li><a class="claim" href="#">Claim <span class="claim-amount">0</span> MATIC</a></li>
+        <li><a class="connect" href="#">Connect Wallet</a></li>
+      </ul>
 
-    <h1>Sprout</h1>
-    <h3>Decentralized Medium+Twitter powered by smart contracts and IPFS on Polygon</h3>
-
-    <div>
-        <span id="claim-amount">?</span> <button id="claim">Claim</button>
+      <ul id="nav-mobile" class="sidenav">
+        <li><a><span id="network" class="badge white" data-badge-caption="polygon"></span></a></li>
+        <li><a href="/twitter/">Sproutter</a></li>
+        <li><a href="/medium/">Sproutium</a></li>
+        <li><a class="claim" href="#">Claim <span class="claim-amount">0</span> MATIC</a></li>
+        <li><a class="connect" href="#">Connect Wallet</a></li>
+      </ul>
+      <a href="#" data-target="nav-mobile" class="sidenav-trigger"><i class="material-icons">menu</i></a>
     </div>
-
-    <p>
-        <a id="connect" href="#">Connect Wallet (Polygon)</a>
-    </p>
-
-    <div id="status">
-        
-    </div>
-
-    <div id="planter" class="hide">
-
-        <h2>Create a new Garden (ERC721 smart contract)</h2>
-
-        <form id="garden-form">
-
-            
-            <input name="name" id="name" placeholder="Name"><br />
-
-            <input name="symbol" id="symbol" placeholder="SPROUT"><br />
-
-            <button id="garden-button">Create Garden</button>
-
-        </form>
-
-    </div>
-
-    <div id="minter" class="hide">
-
-        <h2>Create a new Plant (ERC721 NFT)</h2>
-
-        <form id="mint-form">
-
-            <textarea name="sprout" id="sprout" placeholder="Short Content (like a Tweet)"></textarea><br />
-            <br />
-            Image: <input type="file" id="image" name="image" accept="image/*"><br />
-            <br />
-            <input name="title" id="title" placeholder="Title (Optional)"><br />
-            <br />
-            <textarea name="plant" id="plant" placeholder="Long Content (optional)"></textarea><br />
-            <br />
-            <button id="mint-button">Plant It!</button>
-
-        </form>
+  </nav>
+  <div class="section no-pad-bot" id="index-banner">
+    <div class="container">
+      <br><br>
+      <h1 class="header center green-text">Sprout</h1>
+      <div class="row center">
+        <h5 class="header col s12 light">Decentralized Medium+Twitter powered by smart contracts and IPFS on Polygon</h5>
+      </div>
+      <div class="row center">
+        <a href="#" id="connect" class="connect btn-large waves-effect waves-light green">Connect Wallet</a>
+      </div>
+      <br><br>
 
     </div>
+  </div>
 
-    <div id="garden-name"></div>
-    <div id="posts">
+
+  <div class="container">
+    <div id="about" class="section">
+
+      <!--   Icon Section   -->
+      <div class="row">
+        <div class="col s12 m4">
+          <div class="icon-block">
+            <h2 class="center green-text"><i class="material-icons">account_circle</i></h2>
+            <h5 class="center">Own Your Posts as NFTs</h5>
+
+            <p class="light">Your Garden is a smart contract owned by you. Your posts are NFTs.</p>
+          </div>
+        </div>
+
+        <div class="col s12 m4">
+          <div class="icon-block">
+            <h2 class="center green-text"><i class="material-icons">stream</i></h2>
+            <h5 class="center">Decentralized</h5>
+
+            <p class="light">Your content is stored on IPFS, not controlled by a centralized company.</p>
+          </div>
+        </div>
+
+        <div class="col s12 m4">
+          <div class="icon-block">
+            <h2 class="center green-text"><i class="material-icons">payments</i></h2>
+            <h5 class="center">Create to Earn</h5>
+
+            <p class="light">Follows and Likes include crypto micropayments. Get paid for your content.</p>
+          </div>
+        </div>
+      </div>
 
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@alch/alchemy-web3@latest/dist/alchemyWeb3.min.js"></script>
-
-<script>
-
-    //const web3 = AlchemyWeb3.createAlchemyWeb3("https://polygon-mumbai.g.alchemy.com/v2/sDA8ZaKnUGk1Vt7wSvwn0J6t5fVYtN0T");
-    const web3 = AlchemyWeb3.createAlchemyWeb3("wss://polygon-mumbai.g.alchemy.com/v2/sDA8ZaKnUGk1Vt7wSvwn0J6t5fVYtN0T");
-    var BN = web3.utils.BN;
-    var accounts;
-    var gardenAddress;
-    var ipfsImageURL = "";
-
-    const contractABI = [
-        {
-        "inputs": [],
-        "stateMutability": "nonpayable",
-        "type": "constructor"
-        },
-        {
-        "anonymous": false,
-        "inputs": [
-            {
-            "indexed": true,
-            "internalType": "address",
-            "name": "_owner",
-            "type": "address"
-            },
-            {
-            "indexed": true,
-            "internalType": "address",
-            "name": "_contract",
-            "type": "address"
-            },
-            {
-            "indexed": false,
-            "internalType": "uint256",
-            "name": "",
-            "type": "uint256"
-            }
-        ],
-        "name": "GardenCreated",
-        "type": "event"
-        },
-        {
-        "anonymous": false,
-        "inputs": [
-            {
-            "indexed": true,
-            "internalType": "address",
-            "name": "_follower",
-            "type": "address"
-            },
-            {
-            "indexed": true,
-            "internalType": "address",
-            "name": "_contract",
-            "type": "address"
-            }
-        ],
-        "name": "GardenFollowed",
-        "type": "event"
-        },
-        {
-        "anonymous": false,
-        "inputs": [
-            {
-            "indexed": true,
-            "internalType": "address",
-            "name": "_liker",
-            "type": "address"
-            },
-            {
-            "indexed": true,
-            "internalType": "address",
-            "name": "_contract",
-            "type": "address"
-            },
-            {
-            "indexed": false,
-            "internalType": "uint256",
-            "name": "",
-            "type": "uint256"
-            }
-        ],
-        "name": "PlantLiked",
-        "type": "event"
-        },
-        {
-        "inputs": [
-            {
-            "internalType": "uint256",
-            "name": "",
-            "type": "uint256"
-            }
-        ],
-        "name": "allGardens",
-        "outputs": [
-            {
-            "internalType": "address",
-            "name": "",
-            "type": "address"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-        },
-        {
-        "inputs": [],
-        "name": "claimable",
-        "outputs": [
-            {
-            "internalType": "uint256",
-            "name": "",
-            "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-        },
-        {
-        "inputs": [
-            {
-            "internalType": "string",
-            "name": "name",
-            "type": "string"
-            },
-            {
-            "internalType": "string",
-            "name": "symbol",
-            "type": "string"
-            },
-            {
-            "internalType": "string",
-            "name": "baseTokenURI",
-            "type": "string"
-            }
-        ],
-        "name": "createGarden",
-        "outputs": [
-            {
-            "internalType": "address",
-            "name": "",
-            "type": "address"
-            }
-        ],
-        "stateMutability": "payable",
-        "type": "function"
-        },
-        {
-        "inputs": [
-            {
-            "internalType": "address",
-            "name": "gardenAddress",
-            "type": "address"
-            }
-        ],
-        "name": "follow",
-        "outputs": [],
-        "stateMutability": "payable",
-        "type": "function"
-        },
-        {
-        "inputs": [],
-        "name": "getAllGardens",
-        "outputs": [
-            {
-            "internalType": "address[]",
-            "name": "",
-            "type": "address[]"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-        },
-        {
-        "inputs": [
-            {
-            "internalType": "address",
-            "name": "user",
-            "type": "address"
-            }
-        ],
-        "name": "getGardensForUser",
-        "outputs": [
-            {
-            "internalType": "address[]",
-            "name": "",
-            "type": "address[]"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-        },
-        {
-        "inputs": [
-            {
-            "internalType": "address",
-            "name": "gardenAddress",
-            "type": "address"
-            },
-            {
-            "internalType": "uint256",
-            "name": "tokenId",
-            "type": "uint256"
-            }
-        ],
-        "name": "like",
-        "outputs": [],
-        "stateMutability": "payable",
-        "type": "function"
-        },
-        {
-        "inputs": [],
-        "name": "withdraw",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-        }
-    ];
-    const contractAddress = "0x6F479f4dc152d27390F99a8BCeB0739aA945d767";
-    const factory = new web3.eth.Contract(contractABI, contractAddress);
-
-    const gardenABI = [
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "owner",
-          "type": "address"
-        },
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "approved",
-          "type": "address"
-        },
-        {
-          "indexed": true,
-          "internalType": "uint256",
-          "name": "tokenId",
-          "type": "uint256"
-        }
-      ],
-      "name": "Approval",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "owner",
-          "type": "address"
-        },
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "operator",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "internalType": "bool",
-          "name": "approved",
-          "type": "bool"
-        }
-      ],
-      "name": "ApprovalForAll",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": false,
-          "internalType": "address",
-          "name": "account",
-          "type": "address"
-        }
-      ],
-      "name": "Paused",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "bytes32",
-          "name": "role",
-          "type": "bytes32"
-        },
-        {
-          "indexed": true,
-          "internalType": "bytes32",
-          "name": "previousAdminRole",
-          "type": "bytes32"
-        },
-        {
-          "indexed": true,
-          "internalType": "bytes32",
-          "name": "newAdminRole",
-          "type": "bytes32"
-        }
-      ],
-      "name": "RoleAdminChanged",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "bytes32",
-          "name": "role",
-          "type": "bytes32"
-        },
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "account",
-          "type": "address"
-        },
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "sender",
-          "type": "address"
-        }
-      ],
-      "name": "RoleGranted",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "bytes32",
-          "name": "role",
-          "type": "bytes32"
-        },
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "account",
-          "type": "address"
-        },
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "sender",
-          "type": "address"
-        }
-      ],
-      "name": "RoleRevoked",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "from",
-          "type": "address"
-        },
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "to",
-          "type": "address"
-        },
-        {
-          "indexed": true,
-          "internalType": "uint256",
-          "name": "tokenId",
-          "type": "uint256"
-        }
-      ],
-      "name": "Transfer",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": false,
-          "internalType": "address",
-          "name": "account",
-          "type": "address"
-        }
-      ],
-      "name": "Unpaused",
-      "type": "event"
-    },
-    {
-      "inputs": [],
-      "name": "DEFAULT_ADMIN_ROLE",
-      "outputs": [
-        {
-          "internalType": "bytes32",
-          "name": "",
-          "type": "bytes32"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "MINTER_ROLE",
-      "outputs": [
-        {
-          "internalType": "bytes32",
-          "name": "",
-          "type": "bytes32"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "PAUSER_ROLE",
-      "outputs": [
-        {
-          "internalType": "bytes32",
-          "name": "",
-          "type": "bytes32"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "to",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "tokenId",
-          "type": "uint256"
-        }
-      ],
-      "name": "approve",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "owner",
-          "type": "address"
-        }
-      ],
-      "name": "balanceOf",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "tokenId",
-          "type": "uint256"
-        }
-      ],
-      "name": "burn",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "tokenId",
-          "type": "uint256"
-        }
-      ],
-      "name": "getApproved",
-      "outputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bytes32",
-          "name": "role",
-          "type": "bytes32"
-        }
-      ],
-      "name": "getRoleAdmin",
-      "outputs": [
-        {
-          "internalType": "bytes32",
-          "name": "",
-          "type": "bytes32"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bytes32",
-          "name": "role",
-          "type": "bytes32"
-        },
-        {
-          "internalType": "uint256",
-          "name": "index",
-          "type": "uint256"
-        }
-      ],
-      "name": "getRoleMember",
-      "outputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bytes32",
-          "name": "role",
-          "type": "bytes32"
-        }
-      ],
-      "name": "getRoleMemberCount",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bytes32",
-          "name": "role",
-          "type": "bytes32"
-        },
-        {
-          "internalType": "address",
-          "name": "account",
-          "type": "address"
-        }
-      ],
-      "name": "grantRole",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bytes32",
-          "name": "role",
-          "type": "bytes32"
-        },
-        {
-          "internalType": "address",
-          "name": "account",
-          "type": "address"
-        }
-      ],
-      "name": "hasRole",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "string",
-          "name": "name",
-          "type": "string"
-        },
-        {
-          "internalType": "string",
-          "name": "symbol",
-          "type": "string"
-        },
-        {
-          "internalType": "string",
-          "name": "baseTokenURI",
-          "type": "string"
-        },
-        {
-          "internalType": "address",
-          "name": "owner",
-          "type": "address"
-        }
-      ],
-      "name": "initialize",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "owner",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "operator",
-          "type": "address"
-        }
-      ],
-      "name": "isApprovedForAll",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "string",
-          "name": "tokenURI",
-          "type": "string"
-        }
-      ],
-      "name": "mint",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "name",
-      "outputs": [
-        {
-          "internalType": "string",
-          "name": "",
-          "type": "string"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "tokenId",
-          "type": "uint256"
-        }
-      ],
-      "name": "ownerOf",
-      "outputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "pause",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "paused",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bytes32",
-          "name": "role",
-          "type": "bytes32"
-        },
-        {
-          "internalType": "address",
-          "name": "account",
-          "type": "address"
-        }
-      ],
-      "name": "renounceRole",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bytes32",
-          "name": "role",
-          "type": "bytes32"
-        },
-        {
-          "internalType": "address",
-          "name": "account",
-          "type": "address"
-        }
-      ],
-      "name": "revokeRole",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "from",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "to",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "tokenId",
-          "type": "uint256"
-        }
-      ],
-      "name": "safeTransferFrom",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "from",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "to",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "tokenId",
-          "type": "uint256"
-        },
-        {
-          "internalType": "bytes",
-          "name": "_data",
-          "type": "bytes"
-        }
-      ],
-      "name": "safeTransferFrom",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "operator",
-          "type": "address"
-        },
-        {
-          "internalType": "bool",
-          "name": "approved",
-          "type": "bool"
-        }
-      ],
-      "name": "setApprovalForAll",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bytes4",
-          "name": "interfaceId",
-          "type": "bytes4"
-        }
-      ],
-      "name": "supportsInterface",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "symbol",
-      "outputs": [
-        {
-          "internalType": "string",
-          "name": "",
-          "type": "string"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "index",
-          "type": "uint256"
-        }
-      ],
-      "name": "tokenByIndex",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "owner",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "index",
-          "type": "uint256"
-        }
-      ],
-      "name": "tokenOfOwnerByIndex",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "tokenId",
-          "type": "uint256"
-        }
-      ],
-      "name": "tokenURI",
-      "outputs": [
-        {
-          "internalType": "string",
-          "name": "",
-          "type": "string"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "totalSupply",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "from",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "to",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "tokenId",
-          "type": "uint256"
-        }
-      ],
-      "name": "transferFrom",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "unpause",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    }
-  ];
-    var garden;
-
-    async function main() {
-        const blockNumber = await web3.eth.getBlockNumber();
-        console.log("The latest block number is " + blockNumber);
-        
-        accounts = await web3.eth.getAccounts();
-        connectWallet();
-
-        window.ethereum.on('accountsChanged', function () {
-            web3.eth.getAccounts(function (error, accts) {
-                console.log(accts[0], 'current account after account change');
-                accounts = accts;
-                location.reload();
-            });
-        });
-    }
-    main();
-        
-
-    async function connectWallet() {
-        $("#status").text("Connecting...");
-        if (window.ethereum) {
-            console.log("window.ethereum true");
-            window.ethereum
-                .enable()
-                .then(async result => {
-                    // Metamask is ready to go!
-                    console.log(result);
-                    accounts = result;
-                    var gardens = await factory.methods.getGardensForUser(accounts[0]).call();
-                    console.log(gardens);
-                    if ( gardens.length > 0 ) {
-                        gardenAddress = gardens[gardens.length - 1];
-                        garden = new web3.eth.Contract(gardenABI, gardenAddress);
-                        loadPosts();
-                        $("#minter").show();
-                    } else {
-                        $("#planter").show();
-                    }
-                    $("#status").text("Connected as " + accounts[0]);
-                    var farmed = await factory.methods.claimable().call({'from': ethereum.selectedAddress});
-                    console.log(farmed.toString());
-                    var canClaim = web3.utils.fromWei( farmed.toString() );
-                    $("#claim-amount").text(canClaim + ' MATIC');
-
-                })
-                .catch(reason => {
-                    // Handle error. Likely the user rejected the login.
-                });
-        } else {
-            // The user doesn't have Metamask installed.
-            console.log("window.ethereum false");
-        }
-        
-    }
-
-async function createGarden(name, symbol) {
-
-    const nonce = await web3.eth.getTransactionCount(accounts[0], 'latest');
-
-    //the transaction
-    const tx = {
-        'from': ethereum.selectedAddress,
-        'to': contractAddress,
-        'value': web3.utils.toHex(new BN('100000000000000000')),
-        'nonce': "" + nonce,
-        'data': factory.methods.createGarden(name, symbol, "").encodeABI()
-    };
-    console.log(tx);
-
-    $("#status").text("Waiting for transaction...");
-
-    const txHash = await ethereum.request({
-        method: 'eth_sendTransaction',
-        params: [tx],
-    });
-
-    if (txHash) {
-        console.log("The hash of your transaction is: ", txHash, "\nCheck Alchemy's Mempool to view the status of your transaction!"); 
-        
-        var txn = await web3.eth.getTransaction(txHash);
-        console.log(txn);
-        var all = await factory.methods.getAllGardens().call();
-        console.log(all);
-        var user = await factory.methods.getGardensForUser(accounts[0]).call();
-        console.log(user);
-
-        var pendingTxHash = txHash;
-        web3.eth.subscribe('newBlockHeaders', async (error, event) => {
-            if (error) {
-                console.log("error", error);
-            }
-            console.log("event", event);
-            const blockTxHashes = (await web3.eth.getBlock(event.hash)).transactions;
-
-            if (blockTxHashes.includes(pendingTxHash)) {
-                web3.eth.clearSubscriptions();
-                $("#planter").hide();
-                $("#minter").show();
-                $("#status").text("Garden created.");
-                console.log('confirmed!');
-                console.log(await web3.eth.getTransactionReceipt(pendingTxHash));
-                var all = await factory.methods.getAllGardens().call();
-                console.log(all);
-                var user = await factory.methods.getGardensForUser(accounts[0]).call();
-                console.log(user);
-                gardenAddress = user[user.length - 1];
-                console.log("The new contract is at " + gardenAddress);
-                $("#status").text("Garden created at " + gardenAddress);
-                garden = new web3.eth.Contract(gardenABI, gardenAddress);
-            }
-        });
-    } else {
-        console.log("Something went wrong when submitting your transaction:");
-    } 
-
-}
-
-function ipfsToHttp(ipfs) {
-    var http = "";
-    var cid = ipfs.replace("ipfs://", "");
-    http = "https://" + cid + ".ipfs.dweb.link";
-    return http;
-}
-
-function getPostHTML(metadata) {
-    const sprout = metadata.description;
-    const title = metadata.name;
-    var plant = "";
-    if ( metadata.attributes && metadata.attributes.length > 0 ) {
-        plant = metadata.attributes[0].value;
-    }
-    var postHTML = `
-        <div class="post">
-            <div class="sprout">
-                <span>${sprout}</span> <a class="more" href="#">More</a> <a href="#" class="like">Like</a> <a href="#" class="buy">Sell</a>
+    <div id="planter" class="section hide">
+      <h5>Create a New Garden (smart contract)</h5>
+      <div class="row">
+        <form class="col s12">
+          <div class="row">
+            <div class="input-field col s12">
+              <input id="name" name="name" type="text">
+              <label for="name">Name</label>
+              <span class="helper-text">Give your Garden a name</span>
             </div>
-            <div class="plant hide">
-                <h3>${title}</h3>
-                <div class="content">
-                    <p>${plant}</p>
+          </div>
+          <div class="row">
+            <div class="input-field col s12">
+              <input id="symbol" name="symbol" type="text">
+              <label for="symbol">Symbol</label>
+              <span class="helper-text">Short symbol for your NFTs (like GDN)</span>
+            </div>
+          </div>
+          <div class="row">
+            <div class="input-field col s12">
+              <textarea id="description" class="materialize-textarea" data-length="280"></textarea>
+              <label for="description">Description</label>
+              <span class="helper-text">(Optional) Describe your Garden.</span>
+            </div>
+          </div>
+          <div class="file-field input-field">
+            <div class="btn">
+              <span>Image</span>
+              <input id="gardenimage" class="image" accept="image/*" type="file">
+            </div>
+            <div class="file-path-wrapper">
+              <input class="file-path validate" type="text">
+            </div>
+          </div>
+          <div class="row">
+              <div class="input-field col s12">
+              <input id="url" name="url" type="text">
+              <label for="url">URL</label>
+              <span class="helper-text">An external URL. Maybe a custom domain to publish your Garden.</span>
+            </div>
+          </div>
+          <div class="row">
+              <div class="input-field col s12">
+                <button id="garden-button" class="btn waves-effect waves-light" type="submit" name="action">Create Garden</button>
+              </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="row" style="margin-top: 20px;">
+      <a id="fab" class="btn-floating btn-large waves-effect waves-light green hide"><i class="material-icons">add</i></a>
+    </div>
+
+      
+      <div id="minter" class="section hide">
+        <div class="divider"></div>
+        <h5>Plant Something (mints NFT)</h5>
+        <div class="row">
+          <form class="col s12">
+            <div class="row">
+              <div class="input-field col s12">
+                <textarea id="sprout" class="materialize-textarea" data-length="280"></textarea>
+                <label for="sprout">Sprout</label>
+                <span class="helper-text">A Sprout is a short message, like a Tweet</span>
+              </div>
+            </div>
+
+            <div class="file-field input-field">
+              <div class="btn">
+                <span>Image</span>
+                <input id="image" class="image" accept="image/*" type="file">
+              </div>
+              <div class="file-path-wrapper">
+                <input class="file-path validate" type="text">
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="input-field col s12">
+                <input id="title" name="title" type="text">
+                <label for="title">Title</label>
+                <span class="helper-text">(Optional) Give your Plant (long post) a title</span>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="input-field col s12">
+                <textarea id="plant" class="materialize-textarea"></textarea>
+                <label for="plant">Plant</label>
+                <span class="helper-text">(Optional) A Plant is a long message, like a blog post or Medium article. Markdown supported.</span>
+              </div>
+            </div>
+
+            <div class="row">
+                <div class="input-field col s12">
+                  <button id="mint-button" class="btn waves-effect waves-light" type="submit" name="action">Plant It!</button>
                 </div>
             </div>
-        </div>`;
-    return postHTML;
-}
+          </form>
+        </div>
+        <div class="divider"></div>
+      </div>
 
-async function loadPosts() {
-    //var total = await garden.methods.totalSupply().call();
-    //console.log(total);
-    const covTokensURI = 'https://api.covalenthq.com/v1/80001/tokens/' + gardenAddress + '/nft_token_ids/?&key=ckey_ac7c55f53e19476b85f0a1099af';
-    const response = await fetch(covTokensURI);
-    var covTokens = await response.json();
-    console.log(covTokens);
-    var gardenName = covTokens.data.items[0].contract_name;
-    $("#garden-name").text(gardenName).append('<button data-address="' + gardenAddress + '" class="follow">Follow</button>');
-    $.each( covTokens.data.items, async function(index, item) {
-        var tokenId = item.token_id;
-    
-    
-    //for (let i = 0; i < total; i++) {
-        //var tokenId = await garden.methods.tokenByIndex(i).call();
-        console.log(tokenId);
-        //var tokenUri = await garden.methods.tokenURI(tokenId).call();
-        //console.log(tokenUri);
-        //tokenUri = ipfsToHttp(tokenUri);
-        //console.log(tokenUri);
-        var covURI = 'https://api.covalenthq.com/v1/80001/tokens/' + gardenAddress + '/nft_metadata/' + tokenId + '/?&key=ckey_ac7c55f53e19476b85f0a1099af';
-        const response = await fetch(covURI);
-        var covResp = await response.json();
-        console.log(covResp);
-        var result = covResp.data.items[0].nft_data[0].external_data;
-        var postHTML = getPostHTML(result);
-        var $post = $(postHTML).data("address", gardenAddress).data("token", tokenId);
-        $("#posts").prepend($post);
-    }); // $.each
-}
+      <div id="posts-section" class="section">
 
-async function follow(address) {
-    if ( accounts.length < 1 ) {
-        connectWallet();
-    } else {
-        const nonce = await web3.eth.getTransactionCount(accounts[0], 'latest');
+          <div class="row center">
+            <h5 id="garden-name" class="header"></h5>
+            <a id="fab" class="btn-floating btn-large waves-effect waves-light green hide"><i class="material-icons">add</i></a>
+          </div>
+          <div id="posts">
 
-        //the transaction
-        const tx = {
-            'from': ethereum.selectedAddress,
-            'to': contractAddress,
-            'value': web3.utils.toHex(new BN('100000000000000000')),
-            'nonce': "" + nonce,
-            'data': factory.methods.follow(address).encodeABI()
-        };
-        console.log(tx);
-
-        $("#status").text("Waiting for follow transaction...");
-
-        const txHash = await ethereum.request({
-            method: 'eth_sendTransaction',
-            params: [tx],
-        });
-        console.log(txHash);
-    }
-}
-
-async function like(address, tokenId) {
-    if ( accounts.length < 1 ) {
-        connectWallet();
-    } else {
-        const nonce = await web3.eth.getTransactionCount(accounts[0], 'latest');
-
-        //the transaction
-        const tx = {
-            'from': ethereum.selectedAddress,
-            'to': contractAddress,
-            'value': web3.utils.toHex(new BN('10000000000000000')),
-            'nonce': "" + nonce,
-            'data': factory.methods.like(address, tokenId).encodeABI()
-        };
-        console.log(tx);
-
-        $("#status").text("Waiting for Like transaction...");
-
-        const txHash = await ethereum.request({
-            method: 'eth_sendTransaction',
-            params: [tx],
-        });
-        console.log(txHash);
-    }
-}
-
-async function claim() {
-    const nonce = await web3.eth.getTransactionCount(accounts[0], 'latest');
-
-    //the transaction
-    const tx = {
-        'from': ethereum.selectedAddress,
-        'to': contractAddress,
-        'nonce': "" + nonce,
-        'data': factory.methods.withdraw().encodeABI()
-    };
-    console.log(tx);
-
-    $("#status").text("Waiting for claim transaction...");
-
-    const txHash = await ethereum.request({
-        method: 'eth_sendTransaction',
-        params: [tx],
-    });
-    console.log(txHash);
-}
-
-    $( document ).ready(function() {
-
-        $("#connect").click(function(){
-            connectWallet();
-            return false;
-        });
-
-        $("#posts").on("click", ".more", function(){
-            if ( $(this).text() == "More") {
-                $(this).parent("div").next().show();
-                $(this).text("Less");
-            } else {
-                $(this).parent("div").next().hide();
-                $(this).text("More");
-            }
-            return false;
-        });
-
-        $("#image").change(async function(){
-            var fileInput = document.querySelector("#image");
-            var files = fileInput.files;
-            if ( files.length < 1 ) {
-                return false;
-            }
-            var imageFile = files[0];
-            console.log(imageFile);
-            $("#status").text("Uploading image to IPFS...");
-            $("#mint-button").text("Please Wait").prop('disabled', true);
-            const response = await fetch('https://api.nft.storage/upload', { 
-                method: 'post', 
-                headers: new Headers({
-                    'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkaWQ6ZXRocjoweDU0NkZiYmNhOEIzZDIwMDAzZTA2ZjMzZmRBN0E0NzUxMGExRUY5OTgiLCJpc3MiOiJuZnQtc3RvcmFnZSIsImlhdCI6MTYyODYxMDE4NzkwNiwibmFtZSI6InNwcm91dCBpbWFnZXMifQ.Y1lFAHCaStzfxyRB72iyWIyuPuU-7EoYgNcLwiBHu-8', 
-                    'Content-Type': 'application/json'
-                }), 
-                body: imageFile
-            });
-            var result = await response.json();
-            console.log( result );
-            if (result.ok) {
-                $("#status").text("Saved image to IPFS.");
-                $("#mint-button").text("Plant It!").prop('disabled', false);
-                console.log("Image CID", result.value.cid);
-                ipfsImageURL = "https://" + result.value.cid + ".ipfs.dweb.link/";
-            }
-            
-        });
-
-        $("#mint-button").click(async function(e){
-            e.preventDefault();
-            $("#status").text("Saving to IPFS...");
-            var sprout = $("#sprout").val();
-            if (!sprout) {
-                alert('Sprout is required');
-            }
-            var title = $("#title").val();
-            var plant = $("#plant").val();
-            // TODO: post to server, which relays to web3/nft.storage
-            var plantJson = {
-                "name": title,
-                "description": sprout,
-                "image": ipfsImageURL,
-                "attributes": [
-                    {
-                        "trait": "content",
-                        "value": plant
-                    }
-                ]
-            };
-            const blob = new Blob([JSON.stringify(plantJson)], { type: 'application/json' });
-            const file = new File([ blob ], 'metadata.json');
-            const response = await fetch('https://api.nft.storage/upload', { 
-                method: 'post', 
-                headers: new Headers({
-                    'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkaWQ6ZXRocjoweDU0NkZiYmNhOEIzZDIwMDAzZTA2ZjMzZmRBN0E0NzUxMGExRUY5OTgiLCJpc3MiOiJuZnQtc3RvcmFnZSIsImlhdCI6MTYyODYxMDE3NzQxNSwibmFtZSI6InNwcm91dCBtZXRhZGF0YSJ9.6YwPqstbUyRfNiGwEaYccfGZZYGmXOSuAuLzLduwdRM', 
-                    'Content-Type': 'application/json'
-                }), 
-                body: file
-            });
-            var result = await response.json();
-            console.log( result );
-            if (result.ok) {
-                $("#status").text("Saved to IPFS.");
-
-                // test infura pinning
-                fetch('https://ipfs.infura.io:5001/api/v0/pin/add?arg=' + result.value.cid, { 
-                    method: 'post', 
-                    mode: 'no-cors',
-                    headers: new Headers({
-                        'Authorization': 'Basic MXdhVDRmeHd5blBzcG40RnVBMlJWVjV6VTVUOjJiM2MwNWJjNDMwNDdhYzlkYzA4NWRhY2Y1MzljM2E4'
-                    })
-                });
+          </div>
+      </div>  
 
 
-                var uri = "ipfs://" + result.value.cid;
-                nonce = await web3.eth.getTransactionCount(accounts[0], 'latest');
-                //the transaction
-                const tx = {
-                    'from': ethereum.selectedAddress,
-                    'to': gardenAddress,
-                    'nonce': "" + nonce,
-                    'data': garden.methods.mint(uri).encodeABI()
-                };
-                console.log(tx);
+    <br><br>
+  </div>
 
-                $("#status").text("Waiting for minting transaction...");
-                const txHash = await ethereum.request({
-                    method: 'eth_sendTransaction',
-                    params: [tx],
-                });
-                console.log("minted", txHash);
-                $("#status").text("Minting transaction pending...");
-
-                var pendingTxHash = txHash;
-                web3.eth.subscribe('newBlockHeaders', async (error, event) => {
-                    if (error) {
-                        console.log("error", error);
-                    }
-                    console.log("event", event);
-                    const blockTxHashes = (await web3.eth.getBlock(event.hash)).transactions;
-
-                    if (blockTxHashes.includes(pendingTxHash)) {
-                        web3.eth.clearSubscriptions();
-                        $("#status").text("Plant minted!");
-                        $("#sprout").val("");
-                        $("#title").val("");
-                        $("#plant").val("");
-                        ipfsImageURL = "";
-                        // TODO: publishing stuff
-                        var postHTML = getPostHTML(plantJson);
-                        var tokenId = 0; // TODO get actual tokenId for newly minted plant
-                        var $post = $(postHTML).data("address", gardenAddress).data("token", tokenId);
-                        $("#posts").prepend($post);
-                    }
-                });
+  <footer class="page-footer purple">
+    <div class="container">
+      <div class="row">
+        <div class="col l6 s12">
+          <h5 class="white-text">HackFS Hackathon Submission</h5>
+          <p class="grey-text text-lighten-4">My name is Mark Carey and I think there is huge potential for combining blockchains, decentralized file systems, and DeFi. Sprout is a proof-of-concept vision for one way these could be combined for publishing and sharing short- and long-form content, in which creators truly own their content and get paid from the community.</p>
 
 
+        </div>
+        
+        <!--
+        <div class="col l3 s12">
+          <h5 class="white-text">Settings</h5>
+          <ul>
+            <li><a class="white-text" href="#!">Link 1</a></li>
+            <li><a class="white-text" href="#!">Link 2</a></li>
+            <li><a class="white-text" href="#!">Link 3</a></li>
+            <li><a class="white-text" href="#!">Link 4</a></li>
+          </ul>
+        </div>
+        <div class="col l3 s12">
+          <h5 class="white-text">Connect</h5>
+          <ul>
+            <li><a class="white-text" href="#!">Link 1</a></li>
+            <li><a class="white-text" href="#!">Link 2</a></li>
+            <li><a class="white-text" href="#!">Link 3</a></li>
+            <li><a class="white-text" href="#!">Link 4</a></li>
+          </ul>
+        </div>
+      -->
+      </div>
+    </div>
+    <div class="footer-copyright">
+      <div class="container">
+      Powered by <a class="purple-text text-lighten-3" href="https://polygon.technology">Polygon</a>, <a class="purple-text text-lighten-3" href="https://ipfs.io">IPFS</a>, and <a class="purple-text text-lighten-3" href="https://www.covalenthq.com">Covalent</a>
+      </div>
+    </div>
+  </footer>
 
-            } else {
-                // handle error
-            }
-            return false;
-        });
 
-        $("#garden-button").click(function(){
-            var name = $("#name").val();
-            var symbol = $("#symbol").val();
-            if ( name && symbol ) {
-                createGarden(name, symbol);
-            } else {
-                alert("Need both name and symbol to create a new garden");
-            }
-            return false;
-        });
+  <!--  Scripts-->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@alch/alchemy-web3@latest/dist/alchemyWeb3.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/1.9.1/showdown.min.js" integrity="sha512-L03kznCrNOfVxOUovR6ESfCz9Gfny7gihUX/huVbQB9zjODtYpxaVtIaAkpetoiyV2eqWbvxMH9fiSv5enX7bw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script>const mode = "admin";</script>
+  <script src="js/dapp.js"></script>
 
-        $("body").on("click", ".follow", function(){
-            var address = $(this).data("address");
-            follow(address);
-            return false;
-        });
-
-        $("body").on("click", "#claim", function(){
-            claim();
-            return false;
-        });
-
-        $("#posts").on("click", ".like", function(){
-            const tokenId = $(this).parents("div.post").data("token");
-            const address = $(this).parents("div.post").data("address");
-            console.log(tokenId, address);
-            like(address, tokenId);
-            return false;
-        });
-
-    }); // docready
-</script>
-
-</body>
-
+  </body>
 </html>

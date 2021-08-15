@@ -46,9 +46,10 @@ contract Garden is
         string memory name,
         string memory symbol,
         string memory baseTokenURI,
-        address owner
+        address owner,
+        string memory contractURI
     ) public virtual initializer {
-        __ERC721PresetMinterPauserAutoId_init(name, symbol, baseTokenURI, owner);
+        __ERC721PresetMinterPauserAutoId_init(name, symbol, baseTokenURI, owner, contractURI);
     }
     using CountersUpgradeable for CountersUpgradeable.Counter;
 
@@ -58,6 +59,7 @@ contract Garden is
     CountersUpgradeable.Counter private _tokenIdTracker;
 
     string private _baseTokenURI;
+    string private _contractUri;
 
     /**
      * @dev Grants `DEFAULT_ADMIN_ROLE`, `MINTER_ROLE` and `PAUSER_ROLE` to the
@@ -70,7 +72,8 @@ contract Garden is
         string memory name,
         string memory symbol,
         string memory baseTokenURI,
-        address owner
+        address owner,
+        string memory contractURI
     ) internal initializer {
         __Context_init_unchained();
         __ERC165_init_unchained();
@@ -83,16 +86,18 @@ contract Garden is
         __ERC721Pausable_init_unchained();
         // SPROUT: added for IPFS support
         __ERC721URIStorage_init_unchained();
-        __ERC721PresetMinterPauserAutoId_init_unchained(name, symbol, baseTokenURI, owner);
+        __ERC721PresetMinterPauserAutoId_init_unchained(name, symbol, baseTokenURI, owner, contractURI);
     }
 
     function __ERC721PresetMinterPauserAutoId_init_unchained(
         string memory name,
         string memory symbol,
         string memory baseTokenURI,
-        address owner
+        address owner,
+        string memory contractURI
     ) internal initializer {
         _baseTokenURI = baseTokenURI;
+        _contractUri = contractURI;
 
         _setupRole(DEFAULT_ADMIN_ROLE, owner);
 
@@ -124,6 +129,10 @@ contract Garden is
         // SPROUT: added for IPFS support
         _setTokenURI(_tokenIdTracker.current(), tokenURI);
         _tokenIdTracker.increment();
+    }
+
+    function contractURI() public view returns (string memory) {
+        return _contractUri;
     }
 
     function _burn(uint256 tokenId) internal override(ERC721Upgradeable, ERC721URIStorageUpgradeable) {
@@ -218,11 +227,11 @@ contract FactoryClone {
         uint
     );
 
-    function createGarden(string calldata name, string calldata symbol, string calldata baseTokenURI) external payable returns (address) {
+    function createGarden(string calldata name, string calldata symbol, string calldata baseTokenURI, string calldata contractURI) external payable returns (address) {
         require(msg.value == 0.1 ether, "You must send 0.1 MATIC");
         pendingWithdrawals[owner] += msg.value;
         address clone = Clones.clone(tokenImplementation);
-        Garden(clone).initialize(name, symbol, baseTokenURI, msg.sender);
+        Garden(clone).initialize(name, symbol, baseTokenURI, msg.sender, contractURI);
         allGardens.push(clone);
         userToGardens[msg.sender].push(clone);
         ownerOfGarden[clone] = msg.sender;
@@ -233,6 +242,11 @@ contract FactoryClone {
     // returns array of all Garden contract addresses
     function getAllGardens() public view returns (address[] memory){
        return allGardens;
+    }
+
+    // returns array of all Garden contract addresses for a specified user address
+    function getFollowsForUser(address user) public view returns (address[] memory){
+       return userToFollowedGardens[user];
     }
 
     // returns array of all Garden contract addresses for a specified user address
@@ -261,7 +275,6 @@ contract FactoryClone {
 
     function claimable() public view returns (uint){
         uint amount = pendingWithdrawals[msg.sender];
-        require(amount > 0 ether, "Nothing there");
         return amount;
     }
 
