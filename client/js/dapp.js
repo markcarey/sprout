@@ -6,7 +6,7 @@
     }
 
   var web3;
-  const network = "mumbai";
+  const network = "polygon";
   if (network == "mumbai") {
     web3 = AlchemyWeb3.createAlchemyWeb3("wss://polygon-mumbai.g.alchemy.com/v2/sDA8ZaKnUGk1Vt7wSvwn0J6t5fVYtN0T");
   } else {
@@ -249,7 +249,7 @@
       "type": "function"
     }
   ];
-  const contractAddress = "0xc7d8Feb124F107F95839CC4027A1b52bB717f255";
+  const contractAddress = "0x93d75Cb35059Bfb69d437804A18E0e1a4031A172";
   const factory = new web3.eth.Contract(contractABI, contractAddress);
 
   const gardenABI = [
@@ -1025,7 +1025,7 @@
   var userChain;
   var gardenJson;
 
-  var gas = web3.utils.toHex(new BN('1000000000')); // 1 Gwei;
+  var gas = web3.utils.toHex(new BN('2000000000')); // 2 Gwei;
 
   async function main() {
       dappChain = await web3.eth.getChainId();
@@ -1096,6 +1096,9 @@
                             const response = await fetch(gardenContractURI);
                             gardenJson = await response.json();
                             console.log(gardenJson);
+                            if ( mode == "twitter" ) {
+                                $(".tweetbox__input").find("img").attr("src", gardenJson.image);
+                            }
                         }
                     } else {
                         $("#planter").removeClass("hide");
@@ -1451,8 +1454,8 @@ function getPostHTML(metadata) {
         <span class="card-title activator grey-text text-darken-4">${m.sprout}<i class="material-icons right tooltipped" data-position="bottom" data-tooltip="Read More">more_vert</i></span>
       </div>
       <div class="card-action">
-          <a class="like" href="#">Like</a> <a class="Sell" href="#">Sell</a>
-        </div>
+          <a class="like" href="#">Like</a> <a class="Sell" href="https://opensea.io/assets/matic/${m.address}/${m.tokenId}">Sell</a>
+      </div>
       <div class="card-reveal">
         <span class="card-title grey-text text-darken-4">${m.title}<i class="material-icons right">close</i></span>
         <p>${m.plant}</p>
@@ -1511,7 +1514,7 @@ async function loadPosts(address) {
   if (!address) {
     address = gardenAddress;
   }
-  const covTokensURI = 'https://api.covalenthq.com/v1/80001/tokens/' + address + '/nft_token_ids/?&key=ckey_ac7c55f53e19476b85f0a1099af';
+  const covTokensURI = 'https://api.covalenthq.com/v1/' + dappChain + '/tokens/' + address + '/nft_token_ids/?&key=ckey_ac7c55f53e19476b85f0a1099af';
   const response = await fetch(covTokensURI);
   var covTokens = await response.json();
   console.log(covTokens);
@@ -1531,11 +1534,13 @@ async function loadPosts(address) {
         //console.log(tokenUri);
         //tokenUri = ipfsToHttp(tokenUri);
         //console.log(tokenUri);
-        var covURI = 'https://api.covalenthq.com/v1/80001/tokens/' + address + '/nft_metadata/' + tokenId + '/?&key=ckey_ac7c55f53e19476b85f0a1099af';
+        var covURI = 'https://api.covalenthq.com/v1/' + dappChain + '/tokens/' + address + '/nft_metadata/' + tokenId + '/?&key=ckey_ac7c55f53e19476b85f0a1099af';
         const response = await fetch(covURI);
         var covResp = await response.json();
         console.log(covResp);
         var result = covResp.data.items[0].nft_data[0].external_data;
+        result.address = gardenAddress;
+        result.tokenId = tokenId;
         var postHTML = getPostHTML(result);
         var $post = $(postHTML).attr("id", address + "-" + tokenId).data("address", address).data("token", tokenId);
         //$("#posts").prepend($post);
@@ -1767,7 +1772,7 @@ if ( toastElement ) {
                 $button.text("Create Garden").prop('disabled', false);
               }
               console.log("Image CID", result.value.cid);
-              ipfsImageURL = "https://" + result.value.cid + ".ipfs.dweb.link/";
+              ipfsImageURL = "https://" + result.value.cid + ".ipfs.dweb.link";
           }
           
       });
@@ -1794,11 +1799,11 @@ if ( toastElement ) {
               "date": pubDate,
               "attributes": [
                   {
-                      "trait": "content",
+                      "trait_type": "content",
                       "value": plant
                   },
                   {
-                    "trait": "date",
+                    "trait_type": "date",
                     "value": pubDate
                   }
               ]
@@ -1862,9 +1867,7 @@ if ( toastElement ) {
                       $("#title").val("");
                       $("#plant").val("");
                       ipfsImageURL = "";
-                      // TODO: publishing stuff
-                      var postHTML = getPostHTML(plantJson);
-                      var tokenId = 0; // TODO get actual tokenId for newly minted plant
+                      var tokenId = 0;
                       var receipt = await web3.eth.getTransactionReceipt(pendingTxHash);
                       $.each(receipt.logs, function(index, log){
                         if (log.address == gardenAddress) {
@@ -1878,6 +1881,7 @@ if ( toastElement ) {
                       plantJson.address = gardenAddress;
                       plantJson.gardenName = gardenName;
                       plantJson.garden = gardenJson;
+                      var postHTML = getPostHTML(plantJson);
                       const apiResp = await fetch('https://api.sprout.gdn', { 
                           method: 'post', 
                           headers: new Headers({
