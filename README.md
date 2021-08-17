@@ -28,6 +28,14 @@ While Gardens can exists and grow by themselves -- like a stand-alone blog -- th
 - Covalent API
 - Sprout.gdn Dapp is hosted on IPFS (pinned on Pinata and dlink-ed to Cloudflare)
 
+# Frameworks and Templates
+
+Taking Sprout to the next evel will require a good web designer (and more). For the prototype proof-of-concept, I relied on frameworks and template sets to help me present the vision and focus on building the dapp, the smart contracts, and the server-side API:
+- [Materialize](https://materializecss.com)
+- [Mediumish web template](https://www.wowthemes.net/mediumish-free-bootstrap-4-0-html-template-medium-styled/)
+- [Twitter Clone by @somanath-goudar](https://github.com/somanath-goudar/html-css-projects/tree/master/twitter-clone)
+- Unsplash stock photos by photographer [Markus Spiske](https://unsplash.com/@markusspiske)
+
 # TODO / Roadmap / Questions
 
 - Markdown editor for Plants
